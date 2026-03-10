@@ -15,6 +15,7 @@ export interface Drug {
 export default function DrugsPage() {
   const navigate = useNavigate();
   const [drugs, setDrugs] = useState<Drug[]>([]);
+
   const [isModalOpen, setModalOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
@@ -128,8 +129,8 @@ export default function DrugsPage() {
               setModalOpen(false);
             }}
             onSubmit={handleAddDrug}
-            glucose={drugs[0].glucose}
-            meassurementTime={drugs[0].meassurementTime}
+            glucose={0}
+            meassurementTime={""}
           />
         )}
 
