@@ -19,8 +19,10 @@ export default function DrugsPage() {
   const [isModalOpen, setModalOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
-  const { getCurrentUserGlucose, createGlucose } = useGlucose();
+  const { getCurrentUserGlucose, createGlucose, updateGlucose, updateGlucoseRequestStatus } = useGlucose();
   const { sessionUser, signOut } = useAuth();
+
+  const [editingDrug, setEditingDrug] = useState<Drug | null>(null);
 
   const normalizeDrugs = (response: any): Drug[] => {
     if (!Array.isArray(response)) return [];
@@ -47,20 +49,33 @@ export default function DrugsPage() {
     navigate("/");
   };
 
-  const handleAddDrug = async (glucose: number, meassurementTime: string) => {
+  const handleAddOrUpdateDrug = async (
+    glucose: number,
+    meassurementTime: string
+  ) => {
     const userId = sessionUser?.id || "";
 
     try {
-      await createGlucose({ glucose, meassurementTime, userId });
+      if (editingDrug) {
+        await updateGlucose({ glucose, meassurementTime }, editingDrug.id);
+      } else {
+        await createGlucose({ glucose, meassurementTime, userId });
+      }
 
       const response = await getCurrentUserGlucose();
       const normalized = normalizeDrugs(response);
       setDrugs(normalized);
 
+      setEditingDrug(null);
       setModalOpen(false);
     } catch (error) {
       console.error("Erro ao salvar glicose:", error);
     }
+  };
+
+  const handleEdit = (drug: Drug) => {
+    setEditingDrug(drug);
+    setModalOpen(true);
   };
 
   return (
@@ -112,6 +127,7 @@ export default function DrugsPage() {
             <button
               className="btn-primary"
               onClick={() => {
+                setEditingDrug(null);
                 setModalOpen(true);
               }}
             >
@@ -120,17 +136,21 @@ export default function DrugsPage() {
             </button>
           </div>
         ) : (
-          <DrugList drugs={drugs} />
+          <DrugList
+            drugs={drugs}
+            onEdit={handleEdit}
+          />
         )}
 
         {isModalOpen && (
           <DrugFormModal
             onClose={() => {
               setModalOpen(false);
+              setEditingDrug(null);
             }}
-            onSubmit={handleAddDrug}
-            glucose={0}
-            meassurementTime={""}
+            onSubmit={handleAddOrUpdateDrug}
+            glucose={editingDrug?.glucose}
+            meassurementTime={editingDrug?.meassurementTime}
           />
         )}
 

@@ -5,6 +5,7 @@ import type { GlucoseResponse } from "../model/glucose/glucose.response";
 import type { RequestStatus } from "../model/request-status";
 import { api } from "../service/axios";
 import { useAuth } from "./AuthContext";
+import type { UpdateGlucoseRequest } from "../model/glucose/update-glucose.request";
 
 interface GlucoseProviderProps {
   children: ReactNode;
@@ -18,6 +19,9 @@ interface GlucoseContextProps {
 
   createGlucose: (data: GlucoseRequest) => Promise<void>;
   createGlucoseRequestStatus: RequestStatus;
+
+  updateGlucose: (data: UpdateGlucoseRequest, id: string) => Promise<void>;
+  updateGlucoseRequestStatus: RequestStatus;
 }
 
 const GlucoseContext = createContext<GlucoseContextProps>(
@@ -37,6 +41,9 @@ export const GlucoseProvider = ({ children }: GlucoseProviderProps) => {
     useState<RequestStatus>({ status: "idle" });
 
   const [createGlucoseRequestStatus, setCreateGlucoseRequestStatus] =
+    useState<RequestStatus>({ status: "idle" });
+
+  const [updateGlucoseRequestStatus, setUpdateGlucoseRequestStatus] =
     useState<RequestStatus>({ status: "idle" });
 
   const getCurrentUserGlucose = async () => {
@@ -89,6 +96,28 @@ export const GlucoseProvider = ({ children }: GlucoseProviderProps) => {
     }
   };
 
+  const updateGlucose = async (data: UpdateGlucoseRequest, id: string) => {
+    setUpdateGlucoseRequestStatus({ status: "pending" });
+
+    try {
+      await api.put(`/glucose/edit/${id}`, data);
+
+      setUpdateGlucoseRequestStatus({ status: "succeeded" });
+
+      console.log(data);
+    } catch (error: any) {
+      const message =
+        error?.message || error?.code || "Erro inesperado. Tente novamente.";
+
+      setUpdateGlucoseRequestStatus({ status: "failed", message });
+      console.log(error.response.data);
+
+      console.log(data);
+
+      alert(message);
+    }
+  };
+
   return (
     <GlucoseContext.Provider
       value={{
@@ -97,6 +126,8 @@ export const GlucoseProvider = ({ children }: GlucoseProviderProps) => {
         createGlucose,
         createGlucoseRequestStatus,
         getGlucoseByIdRequestStatus,
+        updateGlucose,
+        updateGlucoseRequestStatus
       }}
     >
       {children}
