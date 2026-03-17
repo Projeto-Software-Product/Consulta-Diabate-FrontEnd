@@ -55,7 +55,9 @@ export default function DrugFormModal({
       onMouseDown={handleBackdropClick}
     >
       <div className="modal" onMouseDown={(e) => e.stopPropagation()}>
-        <h2 style={{ marginTop: 0 }}>Nova Glicemia</h2>
+        <h2 style={{ marginTop: 0 }}>
+          {meassurementTimeHour ? "Editar Glicemia" : "Nova Glicemia"}
+        </h2>
 
         <form onSubmit={handleSubmit} style={{ display: "grid", gap: 12 }}>
           <Input
@@ -79,7 +81,7 @@ export default function DrugFormModal({
             style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}
           >
             <Button type="submit" variant="primary">
-              Cadastrar
+              {meassurementTimeHour ? "Salvar" : "Cadastrar"}
             </Button>
             <Button type="button" variant="secondary" onClick={onClose}>
               Cancelar
