@@ -1,10 +1,10 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
-import type { GlucoseByIdResponse } from "../model/glucose/glucose-by-id.response";
-import type { GlucoseRequest } from "../model/glucose/glucose.request";
 import type { GlucoseResponse } from "../model/glucose/glucose.response";
 import type { RequestStatus } from "../model/request-status";
-import { api } from "../service/axios";
+import type { GlucoseByIdResponse } from "../model/glucose/glucose-by-id.response";
+import type { GlucoseRequest } from "../model/glucose/glucose.request";
 import { useAuth } from "./AuthContext";
+import { api } from "../service/axios";
 import type { UpdateGlucoseRequest } from "../model/glucose/update-glucose.request";
 
 interface GlucoseProviderProps {
@@ -20,12 +20,15 @@ interface GlucoseContextProps {
   createGlucose: (data: GlucoseRequest) => Promise<void>;
   createGlucoseRequestStatus: RequestStatus;
 
+  deleteGlucose: (id: string) => Promise<void>;
+  deleteGlucoseRequestStatus: RequestStatus;
+
   updateGlucose: (data: UpdateGlucoseRequest, id: string) => Promise<void>;
   updateGlucoseRequestStatus: RequestStatus;
 }
 
 const GlucoseContext = createContext<GlucoseContextProps>(
-  {} as GlucoseContextProps,
+  {} as GlucoseContextProps
 );
 
 export const useGlucose = () => {
@@ -41,6 +44,9 @@ export const GlucoseProvider = ({ children }: GlucoseProviderProps) => {
     useState<RequestStatus>({ status: "idle" });
 
   const [createGlucoseRequestStatus, setCreateGlucoseRequestStatus] =
+    useState<RequestStatus>({ status: "idle" });
+
+  const [deleteGlucoseRequestStatus, setDeleteGlucoseRequestStatus] =
     useState<RequestStatus>({ status: "idle" });
 
   const [updateGlucoseRequestStatus, setUpdateGlucoseRequestStatus] =
@@ -96,6 +102,24 @@ export const GlucoseProvider = ({ children }: GlucoseProviderProps) => {
     }
   };
 
+  const deleteGlucose = async (id: string) => {
+    setDeleteGlucoseRequestStatus({ status: "pending" });
+
+    try {
+      await api.delete(`/glucose/delete/${id}`);
+
+      setDeleteGlucoseRequestStatus({ status: "succeeded" });
+    } catch (error: any) {
+      const message =
+        error?.message || error?.code || "Erro inesperado. Tente novamente.";
+      setDeleteGlucoseRequestStatus({ status: "failed", message });
+
+      console.log(error.response.data);
+
+      alert(message);
+    }
+  };
+
   const updateGlucose = async (data: UpdateGlucoseRequest, id: string) => {
     setUpdateGlucoseRequestStatus({ status: "pending" });
 
@@ -108,6 +132,7 @@ export const GlucoseProvider = ({ children }: GlucoseProviderProps) => {
     } catch (error: any) {
       const message =
         error?.message || error?.code || "Erro inesperado. Tente novamente.";
+      setDeleteGlucoseRequestStatus({ status: "failed", message });
 
       setUpdateGlucoseRequestStatus({ status: "failed", message });
       console.log(error.response.data);
@@ -126,8 +151,10 @@ export const GlucoseProvider = ({ children }: GlucoseProviderProps) => {
         createGlucose,
         createGlucoseRequestStatus,
         getGlucoseByIdRequestStatus,
+        deleteGlucose,
+        deleteGlucoseRequestStatus,
         updateGlucose,
-        updateGlucoseRequestStatus
+        updateGlucoseRequestStatus,
       }}
     >
       {children}

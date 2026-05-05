@@ -15,14 +15,14 @@ export interface Drug {
 export default function DrugsPage() {
   const navigate = useNavigate();
   const [drugs, setDrugs] = useState<Drug[]>([]);
-
   const [isModalOpen, setModalOpen] = useState(false);
+  const [editingDrug, setEditingDrug] = useState<Drug | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
-  const { getCurrentUserGlucose, createGlucose, updateGlucose, updateGlucoseRequestStatus } = useGlucose();
+  const { getCurrentUserGlucose, createGlucose, deleteGlucose, updateGlucose } =
+    useGlucose();
   const { sessionUser, signOut } = useAuth();
-
-  const [editingDrug, setEditingDrug] = useState<Drug | null>(null);
 
   const normalizeDrugs = (response: any): Drug[] => {
     if (!Array.isArray(response)) return [];
@@ -78,6 +78,24 @@ export default function DrugsPage() {
     setModalOpen(true);
   };
 
+  const handleDeleteConfirm = (id: string) => {
+    setDeletingId(id);
+  };
+
+  const handleDelete = async () => {
+    if (deletingId !== null) {
+      try {
+        await deleteGlucose(deletingId);
+
+        setDrugs((d) => d.filter((x) => x.id !== deletingId));
+
+        setDeletingId(null);
+      } catch (error) {
+        console.error("Erro ao deletar glicose:", error);
+      }
+    }
+  };
+
   return (
     <div className="app-container">
       <div className="content-wrapper">
@@ -101,6 +119,7 @@ export default function DrugsPage() {
             <button
               className="btn-primary"
               onClick={() => {
+                setEditingDrug(null);
                 setModalOpen(true);
               }}
             >
@@ -139,6 +158,7 @@ export default function DrugsPage() {
           <DrugList
             drugs={drugs}
             onEdit={handleEdit}
+            onDelete={handleDeleteConfirm}
           />
         )}
 
@@ -152,6 +172,36 @@ export default function DrugsPage() {
             glucose={editingDrug?.glucose}
             meassurementTime={editingDrug?.meassurementTime}
           />
+        )}
+
+        {deletingId && (
+          <div className="modal-backdrop" onClick={() => setDeletingId(null)}>
+            <div
+              className="modal modal-confirm"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="modal-header">
+                <h2>Confirmar exclusão</h2>
+              </div>
+              <div className="modal-body">
+                <p>
+                  Tem certeza que deseja excluir esta glicose? Esta ação não
+                  pode ser desfeita.
+                </p>
+              </div>
+              <div className="modal-actions">
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setDeletingId(null)}
+                >
+                  Cancelar
+                </button>
+                <button className="btn btn-danger" onClick={handleDelete}>
+                  Excluir
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
         {showLogoutConfirm && (

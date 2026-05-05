@@ -10,9 +10,10 @@ export interface Drug {
 interface DrugItemProps {
   drug: Drug;
   onEdit: (drug: Drug) => void;
+  onDelete: (id: string) => void;
 }
 
-export default function DrugItem({ drug, onEdit }: DrugItemProps) {
+export default function DrugItem({ drug, onEdit, onDelete }: DrugItemProps) {
   return (
     <div className="card item">
       <span className="title">Número da Glicose: {drug.glucose}</span>{" "}
@@ -20,6 +21,9 @@ export default function DrugItem({ drug, onEdit }: DrugItemProps) {
       <div className="actions">
         <Button size="sm" onClick={() => onEdit(drug)}>
           Editar
+        </Button>
+        <Button size="sm" variant="danger" onClick={() => onDelete(drug.id)}>
+          Excluir
         </Button>
       </div>
     </div>
